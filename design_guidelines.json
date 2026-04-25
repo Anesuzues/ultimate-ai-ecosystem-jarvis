@@ -1,0 +1,113 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 7 (Electric & Neon - Holographic Tactical HUD)",
+  "vibe": "Futuristic, premium, technical precision, JARVIS AI core. Holographic HUD aesthetic, steering clear of pure purple/magenta slop in favor of electric cyan, stark white, and warning amber.",
+  "typography": {
+    "heading_font": "Rajdhani",
+    "body_font": "IBM Plex Mono",
+    "heading_fallback": "Teko, sans-serif",
+    "body_fallback": "JetBrains Mono, monospace",
+    "scale": {
+      "h1": "text-4xl sm:text-5xl uppercase tracking-widest font-bold leading-none",
+      "h2": "text-2xl sm:text-3xl uppercase tracking-wider font-semibold",
+      "h3": "text-xl uppercase tracking-widest font-medium",
+      "body": "text-sm sm:text-base leading-relaxed tracking-tight",
+      "label": "text-xs uppercase tracking-[0.2em] font-medium"
+    }
+  },
+  "colors": {
+    "background": {
+      "base": "#05050B",
+      "surface": "rgba(0, 229, 255, 0.02)",
+      "surface_active": "rgba(0, 229, 255, 0.06)",
+      "panel": "rgba(5, 5, 11, 0.85)"
+    },
+    "text": {
+      "primary": "#E2F1F8",
+      "secondary": "rgba(226, 241, 248, 0.6)",
+      "muted": "rgba(226, 241, 248, 0.4)",
+      "accent": "#00E5FF",
+      "warning": "#FF9100"
+    },
+    "border": {
+      "default": "rgba(0, 229, 255, 0.15)",
+      "hover": "rgba(0, 229, 255, 0.4)",
+      "active": "rgba(0, 229, 255, 0.8)"
+    },
+    "accents": {
+      "primary": "#00E5FF",
+      "secondary": "#0088CC",
+      "warning": "#FF9100",
+      "danger": "#FF3B30",
+      "success": "#00E676"
+    }
+  },
+  "surfaces": {
+    "dashboard_cards": {
+      "style": "Retro-Futurism / Grid Borders",
+      "background": "rgba(0, 229, 255, 0.02)",
+      "border": "1px solid rgba(0, 229, 255, 0.15)",
+      "shadow": "none",
+      "hover_effect": "border-color transitions to rgba(0, 229, 255, 0.5), subtle inner glow inset 0 0 10px rgba(0,229,255,0.05)",
+      "corners": "rounded-none or max 2px"
+    },
+    "glass_panels": {
+      "style": "Crystal Glass with technical overlay",
+      "background": "rgba(5, 5, 11, 0.7)",
+      "blur": "backdrop-blur-xl",
+      "border": "border border-cyan-500/20"
+    }
+  },
+  "layout": {
+    "grid_system": "MODE B: THE 'CONTROL ROOM' GRID",
+    "spacing": "Tight padding within widgets (p-3 or p-4) to maximize data density. Use 1px borders everywhere to create a structural wireframe feel.",
+    "structure": "Three-pane or segmented HUD: Sidebar (History on left/right), Top Banner or Side Strip (System Status Indicators), Main Canvas (Chat). Elements should feel docked, not floating aimlessly."
+  },
+  "motion": {
+    "hover": "Instant color shifts or border brightens. Fast interactions, no slow fades for technical elements.",
+    "entrance": "Staggered 'boot sequence' or 'system initializing' layout. Opacity fade in and slight translation. Consider a global initial loader.",
+    "special_effects": "Blinking cursors for AI typing. Glowing dots for 'ONLINE' status. Flickering numbers on load."
+  },
+  "components": {
+    "system_status_indicators": {
+      "description": "Small tactical widgets showing Router, Memory, Knowledge, Voice, Network.",
+      "style": "Label in tracking-widest text-xs, Status (ONLINE/STDBY), blinking colored dot. Outline border."
+    },
+    "chat_message_ai": {
+      "description": "JARVIS responses",
+      "style": "Left aligned. border-l-2 solid #00E5FF. Monospace text for code, Plex Mono for body. Subtle cyan background tint (rgba(0,229,255,0.03))."
+    },
+    "chat_message_user": {
+      "description": "User queries",
+      "style": "Right aligned or indented. border-r-2 solid rgba(226, 241, 248, 0.3). Minimalist."
+    },
+    "input_field": {
+      "description": "Terminal-like prompt",
+      "style": "Flat background, strict cyan border on focus. Prefix with '>' or similar HUD prompt icon. No rounded pills."
+    },
+    "classification_badge": {
+      "description": "Badge showing the router's decision (e.g. [RESEARCH])",
+      "style": "Tiny uppercase label tracking-[0.2em], bordered, #00E5FF text. Positioned above or beside the message."
+    }
+  },
+  "visual_enhancers": {
+    "scanlines": "Add a pointer-events-none absolute inset-0 background overlay with a repeating linear gradient to simulate CRT/HUD scanlines at 5-10% opacity.",
+    "glow": "Use drop-shadow-[0_0_8px_rgba(0,229,255,0.5)] on critical active text or icons (like the 'ONLINE' indicator dots).",
+    "hud_corners": "Decorate main panels with 2px borders on just the corners (using linear-gradients or pseudo-elements) to simulate a target lock frame."
+  },
+  "media_urls": {
+    "hud_background": {
+      "url": "https://images.pexels.com/photos/28901526/pexels-photo-28901526.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Abstract neon digital polygon in dark space. Use as a very subtle (5-10% opacity) page background or overlay to add texture."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Install and use 'Rajdhani' (Headings/HUD labels) and 'IBM Plex Mono' (Body/Data) from Google Fonts.",
+    "Keep the background #05050B. Do not use generic Tailwind slate/gray backgrounds.",
+    "Build the dashboard using standard HTML/Tailwind for the structural control-room grid (Shadcn cards are too generic/rounded for this).",
+    "Apply 'data-testid' to ALL interactive elements and key info nodes: status cards, chat inputs, send buttons, history list items.",
+    "For the 'scanning line' effect, add a global CSS overlay that creates the subtle horizontal HUD scanlines.",
+    "Ensure the system status dashboard (Router, Memory, Knowledge, Voice, Network) updates or pulses visually to feel 'alive'. Add a subtle animation to the 'ONLINE' indicator.",
+    "Replace standard rounded corners with crisp edges or maximum 2px radius to preserve the tactical/industrial feel."
+  ]
+}
