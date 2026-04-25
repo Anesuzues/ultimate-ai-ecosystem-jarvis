@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  background: #05050B;
+  color: #E2F1F8;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(0, 229, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(0,229,255,0.04); }
+::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.25); }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,229,255,0.5); }
+
+/* Scanlines overlay */
+.scanlines::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 229, 255, 0.025) 0px,
+    rgba(0, 229, 255, 0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 50;
+  mix-blend-mode: overlay;
+}
+
+/* Moving scan line */
+.scanlines::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 229, 255, 0.6) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: scan 8s linear infinite;
+  z-index: 51;
+  opacity: 0.5;
+}
+
+@keyframes scan {
+  0% { top: -2%; }
+  100% { top: 102%; }
+}
+
+/* HUD corner brackets */
+.hud-frame {
+  position: relative;
+}
+.hud-frame::before,
+.hud-frame::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(0, 229, 255, 0.6);
+}
+.hud-frame::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+.hud-frame::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+}
+
+/* Markdown-ish content for JARVIS responses */
+.jarvis-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.jarvis-content code {
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.2);
+  padding: 1px 4px;
+  font-size: 0.85em;
+}
+
+/* Glow utility */
+.text-glow {
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.dot-online { background: #00E676; box-shadow: 0 0 8px rgba(0, 230, 118, 0.8); }
+.dot-standby { background: #FF9100; box-shadow: 0 0 8px rgba(255, 145, 0, 0.7); }
+.dot-offline { background: #FF3B30; box-shadow: 0 0 8px rgba(255, 59, 48, 0.7); }
