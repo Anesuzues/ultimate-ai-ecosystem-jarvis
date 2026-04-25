@@ -1,0 +1,97 @@
+{
+  "name": "Ultimate Superagent with Supabase",
+  "version": "1.0.0",
+  "description": "Integrated AI development system with Supabase backend",
+  
+  "database": {
+    "type": "supabase",
+    "url": "http://localhost:54321",
+    "realtime_url": "ws://localhost:54321/realtime/v1/websocket",
+    "dashboard_url": "http://localhost:54323"
+  },
+  
+  "services": {
+    "bot_anx": {
+      "enabled": true,
+      "host": "localhost",
+      "port": 8001,
+      "env_file": "bot-anx/backend/.env.supabase"
+    },
+    "coordinator": {
+      "enabled": true,
+      "host": "localhost", 
+      "port": 8002,
+      "workers": 4
+    },
+    "webhook_handler": {
+      "enabled": true,
+      "host": "localhost",
+      "port": 8003
+    }
+  },
+  
+  "integrations": {
+    "clickup": {
+      "enabled": true,
+      "sync_interval": 300,
+      "webhook_events": ["taskCreated", "taskUpdated", "taskStatusUpdated"]
+    },
+    "github": {
+      "enabled": true,
+      "auto_pr": true,
+      "branch_protection": true
+    },
+    "vercel": {
+      "enabled": true,
+      "auto_deploy": true,
+      "preview_deployments": true
+    },
+    "anesusbot": {
+      "enabled": true,
+      "worker_pool_size": 4,
+      "performance_monitoring": true
+    }
+  },
+  
+  "workflow": {
+    "quality_gates": {
+      "tdd_enforcement": true,
+      "code_review": true,
+      "security_scan": true,
+      "performance_check": true
+    },
+    "automation": {
+      "ticket_sync": true,
+      "plan_generation": true,
+      "code_execution": true,
+      "deployment": true,
+      "verification": true
+    },
+    "real_time": {
+      "progress_updates": true,
+      "error_notifications": true,
+      "completion_alerts": true
+    }
+  },
+  
+  "monitoring": {
+    "metrics_collection": true,
+    "performance_tracking": true,
+    "error_reporting": true,
+    "real_time_dashboard": true
+  },
+  
+  "security": {
+    "api_key_rotation": false,
+    "webhook_verification": true,
+    "rate_limiting": true,
+    "audit_logging": true
+  },
+  
+  "development": {
+    "debug_mode": true,
+    "verbose_logging": true,
+    "hot_reload": true,
+    "test_mode": false
+  }
+}

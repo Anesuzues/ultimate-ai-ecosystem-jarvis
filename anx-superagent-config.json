@@ -1,0 +1,105 @@
+{
+  "name": "Ultimate Superagent + ANX + Ollama",
+  "version": "1.0.0",
+  "description": "Hybrid AI development system with local Ollama and cloud coordination",
+  "ai_engines": {
+    "primary": {
+      "type": "local_ollama",
+      "endpoint": "http://localhost:11434",
+      "models": {
+        "coding": "codellama:latest",
+        "chat": "llama2:latest",
+        "analysis": "mistral:latest"
+      },
+      "advantages": [
+        "fast",
+        "private",
+        "no_cost",
+        "offline"
+      ]
+    },
+    "fallback": {
+      "type": "anthropic_claude",
+      "endpoint": "https://api.anthropic.com",
+      "model": "claude-3-sonnet-20240229",
+      "advantages": [
+        "advanced_reasoning",
+        "large_context",
+        "reliable"
+      ]
+    },
+    "routing": {
+      "strategy": "local_first",
+      "fallback_conditions": [
+        "ollama_unavailable",
+        "complex_reasoning",
+        "large_context"
+      ]
+    }
+  },
+  "coordination": {
+    "type": "cloud_superagent",
+    "database": "supabase_cloud",
+    "real_time": true,
+    "monitoring": true
+  },
+  "workflow": {
+    "local_tasks": [
+      "code_generation",
+      "code_analysis",
+      "debugging",
+      "refactoring",
+      "documentation",
+      "unit_testing"
+    ],
+    "cloud_tasks": [
+      "workflow_orchestration",
+      "team_coordination",
+      "progress_tracking",
+      "integration_management",
+      "quality_gates",
+      "deployment_automation"
+    ]
+  },
+  "integrations": {
+    "anx": {
+      "enabled": true,
+      "mode": "primary_ai",
+      "features": [
+        "coding",
+        "analysis",
+        "debugging"
+      ]
+    },
+    "ollama": {
+      "enabled": true,
+      "endpoint": "http://localhost:11434",
+      "health_check": true
+    },
+    "supabase": {
+      "enabled": true,
+      "real_time": true,
+      "sync_mode": "metadata_and_results"
+    },
+    "clickup": {
+      "enabled": true,
+      "sync_to_local": true
+    },
+    "github": {
+      "enabled": true,
+      "local_operations": true
+    }
+  },
+  "privacy": {
+    "local_processing": true,
+    "sensitive_data_local": true,
+    "cloud_sync_level": "metadata_only",
+    "encryption": true
+  },
+  "performance": {
+    "ai_response_target": "< 2 seconds",
+    "local_cache": true,
+    "intelligent_routing": true,
+    "parallel_processing": true
+  }
+}

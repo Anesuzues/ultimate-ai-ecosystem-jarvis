@@ -1,0 +1,7 @@
+{
+  "name": "ANX + Superagent Hybrid",
+  "local_ai": "ollama",
+  "cloud_ai": "anthropic",
+  "database": "supabase",
+  "strategy": "local_first"
+}
