@@ -42,6 +42,14 @@ DB_NAME = os.environ["DB_NAME"]
 EMERGENT_LLM_KEY = os.environ["EMERGENT_LLM_KEY"]
 CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",")
 
+# Mutable LLM provider state (changeable at runtime via /api/llm/provider).
+# Defaults seed from env so the choice persists across restarts when set there.
+LLM_STATE: Dict[str, Any] = {
+    "provider": os.environ.get("LLM_PROVIDER", "emergent"),  # "emergent" | "ollama"
+    "ollama_url": os.environ.get("OLLAMA_URL", "http://localhost:11434"),
+    "ollama_model": os.environ.get("OLLAMA_MODEL", "llama3.1"),
+}
+
 mongo_client = AsyncIOMotorClient(MONGO_URL)
 db = mongo_client[DB_NAME]
 sessions_col = db["sessions"]
@@ -92,6 +100,12 @@ class ChatRequest(BaseModel):
 class TtsRequest(BaseModel):
     text: str
     voice: Optional[str] = "nova"
+
+
+class ProviderUpdate(BaseModel):
+    provider: str  # "emergent" | "ollama"
+    ollama_url: Optional[str] = None
+    ollama_model: Optional[str] = None
 
 
 class SystemStatus(BaseModel):
@@ -327,13 +341,12 @@ async def call_jarvis_llm(session_id: str, user_text: str) -> Dict[str, Any]:
     history = await get_session_history(session_id, limit=10)
     contextual = build_context_prompt(history, user_text)
 
-    chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY,
-        session_id=session_id,
-        system_message=JARVIS_SYSTEM_PROMPT,
-    ).with_model("openai", "gpt-4o-mini")
+    provider = LLM_STATE["provider"]
+    if provider == "ollama":
+        raw = await _call_ollama(contextual)
+    else:
+        raw = await _call_emergent(session_id, contextual)
 
-    raw = await chat.send_message(UserMessage(text=contextual))
     cleaned = _strip_code_fence(raw)
     try:
         data = json.loads(cleaned)
@@ -347,6 +360,38 @@ async def call_jarvis_llm(session_id: str, user_text: str) -> Dict[str, Any]:
         }
     except Exception:
         return {"category": "general", "title": "New conversation", "response": raw}
+
+
+async def _call_emergent(session_id: str, user_text: str) -> str:
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=session_id,
+        system_message=JARVIS_SYSTEM_PROMPT,
+    ).with_model("openai", "gpt-4o-mini")
+    return await chat.send_message(UserMessage(text=user_text))
+
+
+async def _call_ollama(user_text: str) -> str:
+    """Call a local Ollama server's /api/chat endpoint and return the assistant's text."""
+    url = LLM_STATE["ollama_url"].rstrip("/") + "/api/chat"
+    payload = {
+        "model": LLM_STATE["ollama_model"],
+        "messages": [
+            {"role": "system", "content": JARVIS_SYSTEM_PROMPT},
+            {"role": "user", "content": user_text},
+        ],
+        "stream": False,
+        "format": "json",
+        "options": {"temperature": 0.4},
+    }
+    async with httpx.AsyncClient(timeout=120) as client:
+        r = await client.post(url, json=payload)
+        if r.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"Ollama error {r.status_code}: {r.text[:200]}")
+        data = r.json()
+        # Ollama /api/chat returns {"message":{"role":"assistant","content":"..."}, ...}
+        msg = (data.get("message") or {}).get("content") or ""
+        return msg.strip()
 
 
 async def save_chat_turn(
@@ -592,4 +637,48 @@ async def voice_tts(req: TtsRequest):
 
 @app.get("/api/")
 async def root():
-    return {"name": "JARVIS API", "version": "2.0.0"}
+    return {"name": "JARVIS API", "version": "2.1.0"}
+
+
+# ----------------------------------------------------------------- LLM provider
+async def _ollama_health(url: str, model: str) -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=4) as client:
+            r = await client.get(url.rstrip("/") + "/api/tags")
+            if r.status_code != 200:
+                return False
+            tags = (r.json() or {}).get("models", [])
+            names = [t.get("name", "") for t in tags]
+            # match by prefix (e.g. user has "llama3.1:latest")
+            return any(n == model or n.split(":")[0] == model for n in names)
+    except Exception:
+        return False
+
+
+@app.get("/api/llm/provider")
+async def get_provider():
+    provider = LLM_STATE["provider"]
+    healthy = True
+    model = "gpt-4o-mini"
+    if provider == "ollama":
+        model = LLM_STATE["ollama_model"]
+        healthy = await _ollama_health(LLM_STATE["ollama_url"], model)
+    return {
+        "provider": provider,
+        "model": model,
+        "ollama_url": LLM_STATE["ollama_url"],
+        "ollama_model": LLM_STATE["ollama_model"],
+        "healthy": healthy,
+    }
+
+
+@app.post("/api/llm/provider")
+async def set_provider(req: ProviderUpdate):
+    if req.provider not in {"emergent", "ollama"}:
+        raise HTTPException(status_code=400, detail="provider must be 'emergent' or 'ollama'")
+    LLM_STATE["provider"] = req.provider
+    if req.ollama_url:
+        LLM_STATE["ollama_url"] = req.ollama_url.strip()
+    if req.ollama_model:
+        LLM_STATE["ollama_model"] = req.ollama_model.strip()
+    return await get_provider()

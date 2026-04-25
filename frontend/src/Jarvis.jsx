@@ -5,12 +5,14 @@ import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import {
   Send, Trash2, Plus, Cpu, Database, BookOpen, Mic, Wifi, MicOff,
-  Volume2, VolumeX, Download, LogOut,
+  Volume2, VolumeX, Download, LogOut, Settings as SettingsIcon, Ear,
 } from 'lucide-react';
 import {
   fetchStatus, fetchSessions, fetchMessages, deleteSession,
   exportSessionUrl, transcribe, ttsUrl, streamChat, logout,
 } from './api';
+import SettingsModal, { WAKE_ENABLED_STORAGE } from './Settings';
+import { useWakeWord } from './wakeWord';
 
 const CATEGORY_LABELS = {
   research: 'RESEARCH', coding: 'CODING', build: 'BUILD',
@@ -124,10 +126,28 @@ export default function Jarvis({ user, onLogout }) {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [voiceOut, setVoiceOut] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [deferredInstall, setDeferredInstall] = useState(null);
+  const [wakeEnabled, setWakeEnabled] = useState(
+    typeof window !== 'undefined' && localStorage.getItem(WAKE_ENABLED_STORAGE) === '1'
+  );
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioPlayerRef = useRef(null);
+
+  // PWA install prompt
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setDeferredInstall(e); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+  const handleInstall = async () => {
+    if (!deferredInstall) return;
+    deferredInstall.prompt();
+    await deferredInstall.userChoice;
+    setDeferredInstall(null);
+  };
 
   const refreshStatus = useCallback(async () => {
     try { const { data } = await fetchStatus(); setSystems(data); } catch {}
@@ -202,6 +222,16 @@ export default function Jarvis({ user, onLogout }) {
       setRecording(false);
     }
   };
+
+  // Wake word: when "Jarvis" detected, auto-start a recording window.
+  const startRecordingRef = useRef(startRecording);
+  useEffect(() => { startRecordingRef.current = startRecording; });
+  const onWake = useCallback(() => {
+    if (!recording && !transcribing && !sending) {
+      startRecordingRef.current && startRecordingRef.current();
+    }
+  }, [recording, transcribing, sending]);
+  const wake = useWakeWord({ enabled: wakeEnabled, onWake });
 
   // ---- streaming send
   const handleSend = async () => {
@@ -290,9 +320,26 @@ export default function Jarvis({ user, onLogout }) {
           </span>
         </div>
         <div className="flex items-center gap-4">
+          {wake.status === 'listening' && (
+            <span data-testid="wake-listening-indicator"
+                  className="flex items-center gap-1.5 font-hud uppercase tracking-[0.2em] text-[10px] text-cyan-jarvis"
+                  title="Wake word active — say 'Jarvis'">
+              <Ear size={12} className="animate-pulse-soft" /> LISTENING
+            </span>
+          )}
+          {wake.status === 'error' && (
+            <span data-testid="wake-error" className="font-hud uppercase tracking-[0.2em] text-[10px] text-amber-warn"
+                  title={wake.error || 'wake-word error'}>
+              WAKE ERR
+            </span>
+          )}
+          <button data-testid="settings-btn" onClick={() => setShowSettings(true)}
+                  className="text-[#E2F1F8]/50 hover:text-cyan-jarvis transition" aria-label="Settings">
+            <SettingsIcon size={16} />
+          </button>
           <span className="dot dot-online animate-pulse-soft" />
           <span className="font-hud uppercase tracking-[0.2em] text-[11px] text-[#E2F1F8]/60 hidden sm:inline">
-            CORE ONLINE · v2.0.0
+            CORE ONLINE · v2.1.0
           </span>
           {user && (
             <div className="flex items-center gap-2 border-l border-cyan-jarvis/20 pl-4">
@@ -419,6 +466,13 @@ export default function Jarvis({ user, onLogout }) {
         <span>STARK INDUSTRIES · CLEARANCE LEVEL 9</span>
         <span data-testid="footer-time">{new Date().toLocaleDateString()} · ALL SYSTEMS NOMINAL</span>
       </footer>
+
+      <SettingsModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        deferredInstall={deferredInstall}
+        onInstall={handleInstall}
+      />
     </div>
   );
 }
