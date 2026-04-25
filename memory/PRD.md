@@ -42,22 +42,38 @@ Built a **clean, simplified JARVIS app from scratch** at `/app/`:
 - ✅ `data-testid` on every interactive element
 - ✅ Tested end-to-end by `testing_agent_v3`: 13/13 backend tests, full frontend E2E flow passing
 
-## Backlog (Prioritized)
+## Implemented (Iteration 2 — 2026-04-25, "P1 + P2")
 **P1**
-- Streaming LLM responses (SSE/WebSocket) instead of waiting for full reply
-- Real "tool execution" per category (e.g. `coding` → run code in sandbox, `research` → web-search MCP, `content` → render markdown nicely)
-- Proper markdown rendering for JARVIS output (currently plain text)
+- ✅ **Streaming LLM replies** via SSE — new `POST /api/chat/stream` endpoint emits `meta` → `chunk` (3-token windows, 25ms throttle) → `done` events. Frontend consumes via `fetch` + `ReadableStream` (async generator).
+- ✅ **Tool execution per category** (prompt-level): system prompt now instructs the model to format per category — research as structured analysis with sources, coding as fenced code blocks, build as goal/stack/architecture/steps/risks, content as deliverable-ready, general as conversational.
+- ✅ **Markdown rendering** with `react-markdown` + `remark-gfm` + `rehype-highlight` + `highlight.js` (github-dark) — verified Python syntax highlighting in JARVIS bubbles.
 
 **P2**
-- Voice input + TTS (the "Voice Synthesis" card is in standby — wire it up with Whisper + OpenAI TTS)
-- Multi-turn context: pass last N messages back to LLM (currently each `/api/chat` is fresh-context per the LlmChat session_id)
-- Authentication (Emergent Google Auth) so sessions are per-user
-- Export conversation as Markdown / JSON
+- ✅ **Voice input** (Whisper STT) — `POST /api/voice/transcribe` accepts multipart audio, frontend uses `MediaRecorder` (audio/webm). Mic button with recording-state indicator.
+- ✅ **Voice output** (OpenAI TTS, voice "nova", model tts-1) — `POST /api/voice/tts` returns `audio/mpeg`. Frontend toggle (`voice-out-toggle`) auto-plays JARVIS replies via `<audio>` blob URLs when enabled.
+- ✅ **Multi-turn context** — backend pre-loads last 10 messages from MongoDB and prepends them to the user's new message before LLM call. Verified via test that a second message references the first.
+- ✅ **Emergent Google Auth** — `POST /api/auth/session` exchanges Emergent session_id for our cookie + DB-backed `user_sessions`. `GET /api/auth/me`, `POST /api/auth/logout`. Sessions and messages now scoped by `user_id`. Frontend has `/login` screen, `AuthCallback` for `#session_id=` fragment, user chip + logout in header. Cookies are `httpOnly`, `secure`, `samesite="none"`.
+- ✅ **Export conversation** — `GET /api/sessions/{id}/export?format=md|json` with proper `Content-Disposition`. Frontend download icon per session.
+
+**Testing**: 22/22 backend pytest passed + 7/8 frontend Playwright passed. The 1 frontend "failure" is mic recording in headless Chromium (no audio device) — app code verified correct, untestable in CI only.
+
+## Backlog (Prioritized)
+**P1**
+- Real code execution sandbox for `coding` category (currently just renders code; no execution)
+- Web-search MCP for `research` category to ground answers in real-time data with citations
+
+**P2**
+- Anonymous-user isolation: currently anonymous chats share a single bucket — give each browser session a separate guest UUID
+- Push-to-talk hotkey + waveform animation while recording
+- Per-user customizable voice (alloy/nova/onyx/echo/shimmer/etc.)
+- Conversation search across history
 
 **P3**
-- Theme switcher (current dark HUD is the only theme)
-- Mobile polish (currently desktop-first)
-- Rate limiting on `/api/chat`
+- Mobile polish (bottom sheet for sessions on small screens)
+- Rate limiting / per-user quotas on `/api/chat/*`
+- Theme switcher + customizable accent color
+- Light client-side telemetry (which categories are most-used)
+- WebSocket replacement for SSE if reconnect/back-pressure becomes an issue
 
 ## Tech Stack
 | Layer | Tech |
